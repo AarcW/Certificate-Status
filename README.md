@@ -1,8 +1,16 @@
-# React + Vite
+# Certificate Status WebApp
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This website allows the students and alumni of BITS Pilani Goa Campus to apply for any certificates required for their higher studies. It will then show the status of the application and what stage it is currently at.
 
-Currently, two official plugins are available:
+It will include a profile page, a home page and a history page.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The project is a work in progress.
+
+After pulling the repository
+
+Run the following:
+
+npm install
+npm install react-router-dom
+npm install jwt-decode
+npm run dev

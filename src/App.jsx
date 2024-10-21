@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import './App.css'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './Home';  // Assuming Home is your main page component
-import About from './About'; // Import the new About page
+import History from './History'; // Import the new History page
 import { Link } from 'react-router-dom';
 // const google = window.google;
 
@@ -49,13 +49,7 @@ function App() {
 
   return (
     <>
-      <div className='App' id="logo">
-
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-        <h1>React</h1>
-      </div>
+      
 
       <div id="signInDiv"></div>
       {user &&
@@ -73,12 +67,12 @@ function App() {
       <nav>
         <ul>
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/about">About</Link></li>
+          <li><Link to="/history">History</Link></li>
         </ul>
       </nav>
         <Routes>
           <Route path="/" element={<Home />} />  {/* Home page */}
-          <Route path="/about" element={<About />} />  {/* About page */}
+          <Route path="/history" element={<History />} />  {/* History page */}
         </Routes>
       </Router>
 
