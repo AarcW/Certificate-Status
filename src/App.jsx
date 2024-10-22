@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import { jwtDecode } from 'jwt-decode';
 import './App.css'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -20,7 +18,6 @@ function App() {
     console.log(userObject)
     setUser(userObject)
     document.getElementById("signInDiv").hidden = true
-    document.getElementById("logo").hidden = true
   }
 
   function handleSignOut(event) {
