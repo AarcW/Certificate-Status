@@ -50,19 +50,6 @@ function App() {
   return (
     <>
       
-
-      <div id="signInDiv"></div>
-      {user &&
-        <div>
-          <br />
-          <img src={user.picture}></img>
-          <h3>{user.name}</h3>
-        </div>
-      }
-      <br />
-      {Object.keys(user).length != 0 &&
-        <button onClick={(e) => handleSignOut(e)}>Sign Out</button>
-      }
       <Router>
       <nav>
         <ul>
@@ -75,6 +62,20 @@ function App() {
           <Route path="/history" element={<History />} />  {/* History page */}
         </Routes>
       </Router>
+      <br />
+      <div id="signInDiv"></div>
+      {user &&
+        <div>
+          <br />
+          <img src={user.picture}></img>
+          <h3>{user.name}</h3>
+        </div>
+      }
+      <br />
+      {Object.keys(user).length != 0 &&
+        <button onClick={(e) => handleSignOut(e)}>Sign Out</button>
+      }
+      
 
     </>
 
