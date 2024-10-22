@@ -6,7 +6,7 @@ It will include a profile page, a home page and a history page.
 
 The project is a work in progress.  
 
-After pulling the repository  
+After cloning the repository  
 
 Run the following:  
 
