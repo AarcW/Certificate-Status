@@ -7,158 +7,369 @@ function GradesheetApplicationForm() {
     name: "",
     email: "",
     mobile: "",
-    numCopies: "",
-    mailingAddress: "",
-    universityAddress: "",
+    homeAddress: "",
+    homeAddressCountry: "",
+    numCopies: 0,
+    universities: [],
+    selectedYears: [],
     amountPaid: "",
     sbiDuNumber: "",
     transactionDate: "",
-    date: "",
-    semesters: {},
+    collectFromBITSGoa: false,
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  const [calculatedCharges, setCalculatedCharges] = useState({
+    gradesheetCharges: 0,
+    envelopeCharges: 0,
+    postalCharges: 0,
+    totalCharges: 0,
+  });
 
-  const handleSemesterChange = (year, term) => {
+  const countries = ["India", "USA", "Canada", "Others"];
+  const years = Array.from({ length: 21 }, (_, i) => `${2004 + i}-${2005 + i}`);
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+
     setFormData((prev) => ({
       ...prev,
-      semesters: {
-        ...prev.semesters,
-        [year]: {
-          ...prev.semesters[year],
-          [term]: !prev.semesters[year]?.[term],
-        },
-      },
+      [name]: newValue,
     }));
+
+    if (name === "collectFromBITSGoa" && checked) {
+      calculateCharges({ ...formData, collectFromBITSGoa: true });
+    } else {
+      calculateCharges({ ...formData, [name]: newValue });
+    }
+  };
+
+  const handleAddUniversity = () => {
+    if (formData.universities.length >= formData.numCopies) {
+      alert("The number of universities cannot exceed the number of copies.");
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      universities: [
+        ...prev.universities,
+        { address: "", country: "", deliverToHome: false },
+      ],
+    }));
+  };
+
+  const handleRemoveUniversity = (index) => {
+    const updatedUniversities = formData.universities.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, universities: updatedUniversities }));
+    calculateCharges({ ...formData, universities: updatedUniversities });
+  };
+
+  const handleUniversityChange = (index, field, value) => {
+    const updatedUniversities = [...formData.universities];
+    updatedUniversities[index][field] = field === "deliverToHome" ? value : value;
+    setFormData((prev) => ({
+      ...prev,
+      universities: updatedUniversities,
+    }));
+    calculateCharges({ ...formData, universities: updatedUniversities });
+  };
+
+  const handleYearSelection = (year) => {
+    if (!formData.selectedYears.find((y) => y.year === year)) {
+      setFormData((prev) => ({
+        ...prev,
+        selectedYears: [
+          ...prev.selectedYears,
+          { year, sem1: false, sem2: false, summerTerm: false },
+        ],
+      }));
+    }
+  };
+
+  const handleYearCheckboxChange = (index, semester) => {
+    const updatedYears = [...formData.selectedYears];
+    updatedYears[index][semester] = !updatedYears[index][semester];
+    setFormData((prev) => ({ ...prev, selectedYears: updatedYears }));
+    calculateCharges({ ...formData, selectedYears: updatedYears });
+  };
+
+  const handleYearRemoval = (index) => {
+    const updatedYears = formData.selectedYears.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, selectedYears: updatedYears }));
+    calculateCharges({ ...formData, selectedYears: updatedYears });
+  };
+
+  const calculateCharges = (data) => {
+    const numCopies = parseInt(data.numCopies || 0);
+
+    // Gradesheet Charges
+    const numSemestersChecked = data.selectedYears.reduce(
+      (total, year) =>
+        total + (year.sem1 ? 1 : 0) + (year.sem2 ? 1 : 0) + (year.summerTerm ? 1 : 0),
+      0
+    );
+    const gradesheetCharges = numSemestersChecked * numCopies * 100;
+
+    // Envelope Charges
+    let envelopeCharges = data.universities.length * 20;
+    const hasDeliverToHome = data.universities.some((u) => u.deliverToHome);
+    const extraCopies = numCopies - data.universities.length;
+
+    if (hasDeliverToHome && !data.collectFromBITSGoa) {
+      envelopeCharges += 40; // Legal size envelope
+    } else if (extraCopies > 0 && !data.collectFromBITSGoa) {
+      envelopeCharges += 20; // Additional envelope for extra copies
+    }
+
+    // Postal Charges
+    let postalCharges = 0;
+    if (!data.collectFromBITSGoa) {
+      postalCharges += data.universities.reduce((total, university) => {
+        if (!university.deliverToHome) {
+          switch (university.country) {
+            case "India":
+              return total + 250;
+            case "USA":
+            case "Others":
+              return total + 3600;
+            case "Canada":
+              return total + 4200;
+            default:
+              return total;
+          }
+        }
+        return total;
+      }, 0);
+
+      if (hasDeliverToHome || extraCopies > 0) {
+        switch (data.homeAddressCountry) {
+          case "India":
+            postalCharges += 250;
+            break;
+          case "USA":
+          case "Others":
+            postalCharges += 3600;
+            break;
+          case "Canada":
+            postalCharges += 4200;
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
+    const totalCharges = gradesheetCharges + envelopeCharges + postalCharges;
+
+    setCalculatedCharges({ gradesheetCharges, envelopeCharges, postalCharges, totalCharges });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
+    console.log("Calculated Charges:", calculatedCharges);
     alert("Form submitted! Check the console for submitted data.");
   };
-
-  const academicYears = [
-    "2014-15",
-    "2015-16",
-    "2016-17",
-    "2017-18",
-    "2018-19",
-    "2019-20",
-    "2020-21",
-    "2021-22",
-    "2022-23",
-    "2023-24",
-  ];
-
-  const terms = ["SEM I", "SEM II", "Summer Term"];
 
   return (
     <form className="form-container" onSubmit={handleSubmit}>
       <h1 className="form-title">Gradesheet Application Form</h1>
 
-      <p>
-        To<br />
-        The Associate Dean,<br />
-        AUGS Division BITS, Pilani – K.K Birla Goa Campus
-      </p>
-      <p>
-        Sir,<br />
-        Please issue me duplicate grade sheets. The following are my details:
-      </p>
+      {/* Personal Information */}
+      <h2>Personal Information</h2>
+      <input
+        type="text"
+        name="idNumber"
+        value={formData.idNumber}
+        placeholder="ID Number"
+        onChange={handleInputChange}
+      />
+      <input
+        type="text"
+        name="name"
+        value={formData.name}
+        placeholder="Name"
+        onChange={handleInputChange}
+      />
+      <input
+        type="email"
+        name="email"
+        value={formData.email}
+        placeholder="Email"
+        onChange={handleInputChange}
+      />
+      <input
+        type="tel"
+        name="mobile"
+        value={formData.mobile}
+        placeholder="Mobile"
+        onChange={handleInputChange}
+      />
 
-      <label>ID Number *</label>
-      <input type="text" name="idNumber" required className="form-input" onChange={handleChange} />
+      {/* Home Address */}
+      <h2>Home Address</h2>
+      <textarea
+        name="homeAddress"
+        value={formData.homeAddress}
+        placeholder="Home Address"
+        onChange={handleInputChange}
+      />
+      <select
+        name="homeAddressCountry"
+        value={formData.homeAddressCountry}
+        onChange={handleInputChange}
+      >
+        <option value="">Select Country</option>
+        {countries.map((country, index) => (
+          <option key={index} value={country}>
+            {country}
+          </option>
+        ))}
+      </select>
+      <input
+        type="number"
+        name="numCopies"
+        value={formData.numCopies}
+        placeholder="Number of Copies"
+        onChange={handleInputChange}
+      />
 
-      <label>Name *</label>
-      <input type="text" name="name" required className="form-input" onChange={handleChange} />
-
-      <label>Email Address *</label>
-      <input type="email" name="email" required className="form-input" onChange={handleChange} />
-
-      <label>Mobile Number *</label>
-      <input type="text" name="mobile" required className="form-input" onChange={handleChange} />
-
-      <label>Duplicate gradesheet for following semester</label>
-      <table className="checkbox-table">
-        <thead>
-          <tr>
-            <th>Academic Year</th>
-            {terms.map((term) => (
-              <th key={term}>{term}</th>
+      {/* University Details */}
+      <h2>University Details</h2>
+      <button type="button" onClick={handleAddUniversity}>
+        <span className="add-button">+ Add University Details</span>
+      </button>
+      {formData.universities.map((university, index) => (
+        <div key={index} className="university-details">
+          <input
+            type="text"
+            value={university.address}
+            placeholder="University Address"
+            onChange={(e) =>
+              handleUniversityChange(index, "address", e.target.value)
+            }
+          />
+          <select
+            value={university.country}
+            onChange={(e) =>
+              handleUniversityChange(index, "country", e.target.value)
+            }
+          >
+            <option value="">Select Country</option>
+            {countries.map((country, idx) => (
+              <option key={idx} value={country}>
+                {country}
+              </option>
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {academicYears.map((year) => (
-            <tr key={year}>
-              <td>{`Academic Year ${year}`}</td>
-              {terms.map((term) => (
-                <td key={term}>
-                  <input
-                    type="checkbox"
-                    checked={formData.semesters[year]?.[term] || false}
-                    onChange={() => handleSemesterChange(year, term)}
-                  />
-                </td>
-              ))}
-            </tr>
+          </select>
+          <label>
+            <input
+              type="checkbox"
+              checked={university.deliverToHome}
+              onChange={(e) =>
+                handleUniversityChange(index, "deliverToHome", e.target.checked)
+              }
+            />
+            Deliver to Home Address
+          </label>
+          <button type="button" onClick={() => handleRemoveUniversity(index)}>
+            🗑️
+          </button>
+        </div>
+      ))}
+
+      {/* Academic Years */}
+      <h2>Academic Years</h2>
+      <div>
+        <select
+          onChange={(e) => handleYearSelection(e.target.value)}
+          value=""
+        >
+          <option value="">+ Select a New Year</option>
+          {years.map((year, idx) => (
+            <option key={idx} value={year}>
+              {year}
+            </option>
           ))}
-        </tbody>
-      </table>
+        </select>
+      </div>
+      {formData.selectedYears.map((yearData, index) => (
+        <div key={index} className="year-details">
+          <span>{yearData.year}</span>
+          <label>
+            <input
+              type="checkbox"
+              checked={yearData.sem1}
+              onChange={() => handleYearCheckboxChange(index, "sem1")}
+            />
+            Semester 1
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={yearData.sem2}
+              onChange={() => handleYearCheckboxChange(index, "sem2")}
+            />
+            Semester 2
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={yearData.summerTerm}
+              onChange={() => handleYearCheckboxChange(index, "summerTerm")}
+            />
+            Summer Term
+          </label>
+          <button type="button" onClick={() => handleYearRemoval(index)}>
+            🗑️
+          </button>
+        </div>
+      ))}
 
-      <label>Number of Copies *</label>
-      <input type="number" name="numCopies" required className="form-input" onChange={handleChange} />
+      {/* Charges */}
+      <h3>Charges</h3>
+      <p>Gradesheet Charges: ₹{calculatedCharges.gradesheetCharges}</p>
+      <p>Envelope Charges: ₹{calculatedCharges.envelopeCharges}</p>
+      <p>Postal Charges: ₹{calculatedCharges.postalCharges}</p>
+      <p>Total Charges: ₹{calculatedCharges.totalCharges}</p>
+      <label>
+        <input
+          type="checkbox"
+          name="collectFromBITSGoa"
+          checked={formData.collectFromBITSGoa}
+          onChange={handleInputChange}
+        />
+        Collect Gradesheet from BITS Goa AUGSD Office
+      </label>
 
-      <label>Mailing Address (Postal/Email)</label>
-      <textarea name="mailingAddress" className="form-input" onChange={handleChange} />
+      {/* Payment Details */}
+      <h2>Payment Details</h2>
+      <input
+        type="text"
+        name="amountPaid"
+        value={formData.amountPaid}
+        placeholder="Amount Paid"
+        onChange={handleInputChange}
+      />
+      <input
+        type="text"
+        name="sbiDuNumber"
+        value={formData.sbiDuNumber}
+        placeholder="SBI DU Number"
+        onChange={handleInputChange}
+      />
+      <input
+        type="date"
+        name="transactionDate"
+        value={formData.transactionDate}
+        onChange={handleInputChange}
+      />
 
-      <label>University address (if gradesheet has to be sealed)</label>
-      <textarea name="universityAddress" className="form-input" onChange={handleChange} />
-
-      <p>
-        Charges: <br />
-        Duplicate gradesheet - Rs 100/- per copy<br />
-        Envelope Charges: <br />A4 size - Rs 20/-, Legal size - Rs 40/-<br />
-        Postal / Courier Charges: <br />Within India - Rs 250/- <br />Canada - Rs 4200/- <br />Other Countries - Rs 3600/-
-      </p>
-
-      <p>
-        <strong>Payment should be done through SBI Collect</strong>
-      </p>
-
-      <p>
-        <em>Example Calculation:</em><br />
-        E.g., if a student requires 5 duplicate copies:<br />
-        4 copies sealed, sent to home address (India)<br />
-        1 copy sent to a foreign university<br />
-        Charges:<br />
-        Duplicate Grade-sheet: (5 * Rs 100) = Rs 500<br />
-        2 A4 size envelopes: (2 * Rs 20) = Rs 40<br />
-        1 Legal size envelope for 4 sealed copies: Rs 40<br />
-        Postal Charges within India: Rs 250<br />
-        Postal Charge for Foreign University: Rs 3600<br />
-        Total charges to pay: Rs 4430<br />
-      </p>
-
-      <label>Total Amount Paid *</label>
-      <input type="text" name="amountPaid" required className="form-input" onChange={handleChange} />
-
-      <label>SBI DU Number Details *</label>
-      <input type="text" name="sbiDuNumber" required className="form-input" onChange={handleChange} />
-
-      <label>Date of Transaction *</label>
-      <input type="date" name="transactionDate" required className="form-input" onChange={handleChange} />
-
-      <label>Date *</label>
-      <input type="date" name="date" required className="form-input" onChange={handleChange} />
-
-      
-
-      <button type="submit" className="submit-button">Submit</button>
+      {/* Submit */}
+      <button type="submit" className="submit-button">
+        Submit
+      </button>
     </form>
   );
 }

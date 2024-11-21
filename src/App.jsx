@@ -3,7 +3,7 @@ import Home from './Pages/Home';
 import History from './Pages/History'; 
 import Navbar from './Navbar';
 import Transcript from './Pages/Transcript';
-import Gradesheet from './Pages/Gradesheet';
+import GradesheetApplicationForm from './Pages/Gradesheet';
 // const google = window.google;
 
 
@@ -20,7 +20,7 @@ function App() {
           <Route path="/" element={<Home />} />  {/* Home page */}
           <Route path="/history" element={<History />} />  {/* History page */}
           <Route path="/transcript" element={<Transcript />} />  {/* Transcript page */}
-          <Route path="/gradesheet" element={<Gradesheet />} />  {/* Gradesheet page */}
+          <Route path="/gradesheet" element={<GradesheetApplicationForm />} />  {/* Gradesheet page */}
         </Routes>
         </div>
       <br />
