@@ -7,8 +7,8 @@ function GradesheetApplicationForm() {
     name: "",
     email: "",
     mobile: "",
-    homeAddress: "",
-    homeAddressCountry: "",
+    currentAddress: "",
+    currentAddressCountry: "",
     numCopies: 0,
     universities: [],
     selectedYears: [],
@@ -16,6 +16,7 @@ function GradesheetApplicationForm() {
     sbiDuNumber: "",
     transactionDate: "",
     collectFromBITSGoa: false,
+    emailGradesheet: false, // Added state for "E-mail me the gradesheet"
   });
 
   const [calculatedCharges, setCalculatedCharges] = useState({
@@ -25,12 +26,36 @@ function GradesheetApplicationForm() {
     totalCharges: 0,
   });
 
+  const [errors, setErrors] = useState({
+    amountPaid: "",
+    sbiDuNumber: "",
+    transactionDate: "",
+    idNumber: "",
+    email: "",
+    mobile: "",
+    currentAddress: "",
+    currentAddressCountry: "",
+    universitiesAddress: "",
+    universitiesAddressCountry: "",
+    academicYears: "", // Added error field for academic years
+  });
+
   const countries = ["India", "USA", "Canada", "Others"];
   const years = Array.from({ length: 21 }, (_, i) => `${2004 + i}-${2005 + i}`);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : value;
+    let newValue = type === "checkbox" ? checked : value;
+
+    if (name === "numCopies") {
+      const newCopies = Math.max(0, parseInt(newValue || 0)); // Ensure non-negative value
+      const numUniversities = formData.universities.length;
+      if (newCopies < numUniversities) {
+        alert("The number of copies cannot be less than the number of universities.");
+      }
+
+      newValue = newCopies < numUniversities ? numUniversities : newCopies;
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -45,8 +70,12 @@ function GradesheetApplicationForm() {
   };
 
   const handleAddUniversity = () => {
+    if (formData.universities.length >= 10) {
+      alert("You can add a maximum of 10 universities.");
+      return;
+    }
     if (formData.universities.length >= formData.numCopies) {
-      alert("The number of universities cannot exceed the number of copies.");
+      alert("You cannot have more universities than number of copies");
       return;
     }
 
@@ -143,7 +172,7 @@ function GradesheetApplicationForm() {
       }, 0);
 
       if (hasDeliverToHome || extraCopies > 0) {
-        switch (data.homeAddressCountry) {
+        switch (data.currentAddressCountry) {
           case "India":
             postalCharges += 250;
             break;
@@ -165,17 +194,128 @@ function GradesheetApplicationForm() {
     setCalculatedCharges({ gradesheetCharges, envelopeCharges, postalCharges, totalCharges });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    console.log("Calculated Charges:", calculatedCharges);
-    alert("Form submitted! Check the console for submitted data.");
+  const validateForm = () => {
+    let formIsValid = true;
+    
+      let newErrors = { 
+        amountPaid: "", 
+        sbiDuNumber: "", 
+        transactionDate: "", 
+        idNumber: "", 
+        name: "", 
+        email: "", 
+        mobile: "", 
+        currentAddress: "", 
+        currentAddressCountry: "", 
+        universitiesAddress: "", 
+        academicYears: "", // Validate academic years
+      
+      };
+
+        // Added validation for Academic Years
+    if (!formData.selectedYears.length || !formData.selectedYears.some(year => year.sem1 || year.sem2 || year.summerTerm)) {
+      newErrors.academicYears = "At least one academic year and one semester must be selected.";
+      formIsValid = false;
+    }
+
+    // Validate Amount Paid
+    if (!formData.amountPaid || isNaN(formData.amountPaid) || parseInt(formData.amountPaid) <= 0) {
+      newErrors.amountPaid = "Amount Paid must be a positive integer.";
+      formIsValid = false;
+    }
+
+    // Validate ID Number (exactly 13 characters)
+    if (formData.idNumber.length !== 13) {
+      newErrors.idNumber = "ID Number must be exactly 13 characters.";
+      formIsValid = false;
+    }
+
+    // Validate Email Format
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+      formIsValid = false;
+    }
+
+    // Validate Mobile Format (Basic international format validation)
+    const mobilePattern = /^[+]?[0-9]{1,4}?[-.\s]?[0-9]{1,14}?$/;
+    if (!mobilePattern.test(formData.mobile)) {
+      newErrors.mobile = "Please enter a valid phone number.";
+      formIsValid = false;
+    }
+
+    // Validate Amount Paid (integer)
+    if (!formData.amountPaid || !Number.isInteger(parseFloat(formData.amountPaid))) {
+      newErrors.amountPaid = "Amount Paid must be an integer.";
+      formIsValid = false;
+    }
+
+    // Validate Transaction Date (should not be beyond today's date)
+    if (!formData.transactionDate || new Date(formData.transactionDate) > new Date()) {
+      newErrors.transactionDate = "Transaction Date must not be beyond today's date.";
+      formIsValid = false;
+    }
+
+    // Validate Current Address & Universities Address (cannot be empty)
+    if (!formData.currentAddress.trim()) {
+      newErrors.currentAddress = "Current Address cannot be empty.";
+      formIsValid = false;
+    }
+
+    if (!formData.currentAddressCountry) {
+      newErrors.currentAddress = "Please select a Current Address Country.";
+      formIsValid = false;
+    }
+
+    formData.universities.forEach((university, index) => {
+      if (!university.address.trim()) {
+        newErrors.universitiesAddress = `University Address cannot be empty.`;
+        formIsValid = false;
+      }
+    });
+
+    // Validate Number of Copies (can't be negative)
+    if (formData.numCopies <= 0) {
+      newErrors.numCopies = "Number of Copies cannot be zero or negative.";
+      formIsValid = false;
+    }
+
+    if (!formData.sbiDuNumber) {
+      newErrors.sbiDuNumber = "Please mention a SBI DU Number.";
+      formIsValid = false;
+    }
+
+    formData.universities.forEach((university, index) => {
+      if (!university.country.trim()) {
+        newErrors.universitiesAddress = `Please select a University Country.`;
+        formIsValid = false;
+      }
+    });
+
+    if (!formData.name) {
+      newErrors.name = "Please mention your Name.";
+      formIsValid = false;
+    }
+
+    setErrors(newErrors);
+    return formIsValid;
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (validateForm()) {
+      alert("Form submitted successfully!");
+    } else {
+      alert("Please correct the errors in the form.");
+    }
+  };
+
+  
   return (
     <form className="form-container" onSubmit={handleSubmit}>
       <h1 className="form-title">Gradesheet Application Form</h1>
-
+      <br/>
       {/* Personal Information */}
       <h2>Personal Information</h2>
       <input
@@ -185,6 +325,8 @@ function GradesheetApplicationForm() {
         placeholder="ID Number"
         onChange={handleInputChange}
       />
+      {errors.idNumber && <p className="error-text">{errors.idNumber}</p>}
+      
       <input
         type="text"
         name="name"
@@ -192,6 +334,8 @@ function GradesheetApplicationForm() {
         placeholder="Name"
         onChange={handleInputChange}
       />
+      {errors.name && <p className="error-text">{errors.name}</p>}
+      
       <input
         type="email"
         name="email"
@@ -199,6 +343,8 @@ function GradesheetApplicationForm() {
         placeholder="Email"
         onChange={handleInputChange}
       />
+      {errors.email && <p className="error-text">{errors.email}</p>}
+      
       <input
         type="tel"
         name="mobile"
@@ -206,20 +352,33 @@ function GradesheetApplicationForm() {
         placeholder="Mobile"
         onChange={handleInputChange}
       />
-
-      {/* Home Address */}
-      <h2>Home Address</h2>
+      {errors.mobile && <p className="error-text">{errors.mobile}</p>}
+      
+      <label>
+        <input
+          type="checkbox"
+          name="emailGradesheet"
+          checked={formData.emailGradesheet}
+          onChange={handleInputChange}
+        />
+        E-mail me the Gradesheet 
+      </label>
+      <br/>
+      {/* Current Address */}
+      <h2>Current Address</h2>
       <textarea
-        name="homeAddress"
-        value={formData.homeAddress}
-        placeholder="Home Address"
+        name="currentAddress"
+        value={formData.currentAddress}
+        placeholder="Current Address"
         onChange={handleInputChange}
       />
+      
       <select
-        name="homeAddressCountry"
-        value={formData.homeAddressCountry}
+        name="currentAddressCountry"
+        value={formData.currentAddressCountry}
         onChange={handleInputChange}
       >
+        
         <option value="">Select Country</option>
         {countries.map((country, index) => (
           <option key={index} value={country}>
@@ -227,6 +386,18 @@ function GradesheetApplicationForm() {
           </option>
         ))}
       </select>
+      {errors.currentAddress && <p className="error-text">{errors.currentAddress}</p>}
+      <label>
+        <input
+          type="checkbox"
+          name="collectFromBITSGoa"
+          checked={formData.collectFromBITSGoa}
+          onChange={handleInputChange}
+        />
+        Collect Gradesheet from BITS Goa AUGSD Office
+      </label>
+      
+      <h3>Number of Copies of Gradesheet:</h3>    
       <input
         type="number"
         name="numCopies"
@@ -234,12 +405,11 @@ function GradesheetApplicationForm() {
         placeholder="Number of Copies"
         onChange={handleInputChange}
       />
-
+      {errors.numCopies && <p className="error-text">{errors.numCopies}</p>}
+      <br/><br/>
       {/* University Details */}
       <h2>University Details</h2>
-      <button type="button" onClick={handleAddUniversity}>
-        <span className="add-button">+ Add University Details</span>
-      </button>
+      <br/>
       {formData.universities.map((university, index) => (
         <div key={index} className="university-details">
           <input
@@ -255,7 +425,9 @@ function GradesheetApplicationForm() {
             onChange={(e) =>
               handleUniversityChange(index, "country", e.target.value)
             }
+            className={errors.universitiesAddress ? "error" : ""}
           >
+            
             <option value="">Select Country</option>
             {countries.map((country, idx) => (
               <option key={idx} value={country}>
@@ -263,6 +435,11 @@ function GradesheetApplicationForm() {
               </option>
             ))}
           </select>
+
+          {errors.universitiesAddress && (
+            <p className="error-text">{errors.universitiesAddress}</p>
+          )}
+          <br/>
           <label>
             <input
               type="checkbox"
@@ -271,13 +448,18 @@ function GradesheetApplicationForm() {
                 handleUniversityChange(index, "deliverToHome", e.target.checked)
               }
             />
-            Deliver to Home Address
+            Deliver to Current Address
           </label>
-          <button type="button" onClick={() => handleRemoveUniversity(index)}>
+          <button type="button" className="dustbin-button" onClick={() => handleRemoveUniversity(index)}>
             🗑️
           </button>
         </div>
       ))}
+
+      <button type="button" onClick={handleAddUniversity}>
+      <span className="add-button">+ Add University Details</span>
+      </button>
+      <br/><br/>
 
       {/* Academic Years */}
       <h2>Academic Years</h2>
@@ -321,11 +503,14 @@ function GradesheetApplicationForm() {
             />
             Summer Term
           </label>
-          <button type="button" onClick={() => handleYearRemoval(index)}>
+          <button type="button" className="dustbin-button" onClick={() => handleYearRemoval(index)}>
             🗑️
           </button>
+
         </div>
       ))}
+            {errors.academicYears && <p className="error-text">{errors.academicYears}</p>}
+
 
       {/* Charges */}
       <h3>Charges</h3>
@@ -333,15 +518,7 @@ function GradesheetApplicationForm() {
       <p>Envelope Charges: ₹{calculatedCharges.envelopeCharges}</p>
       <p>Postal Charges: ₹{calculatedCharges.postalCharges}</p>
       <p>Total Charges: ₹{calculatedCharges.totalCharges}</p>
-      <label>
-        <input
-          type="checkbox"
-          name="collectFromBITSGoa"
-          checked={formData.collectFromBITSGoa}
-          onChange={handleInputChange}
-        />
-        Collect Gradesheet from BITS Goa AUGSD Office
-      </label>
+      
 
       {/* Payment Details */}
       <h2>Payment Details</h2>
@@ -352,6 +529,8 @@ function GradesheetApplicationForm() {
         placeholder="Amount Paid"
         onChange={handleInputChange}
       />
+      {errors.amountPaid && <p className="error-text">{errors.amountPaid}</p>}
+
       <input
         type="text"
         name="sbiDuNumber"
@@ -359,15 +538,18 @@ function GradesheetApplicationForm() {
         placeholder="SBI DU Number"
         onChange={handleInputChange}
       />
+      {errors.sbiDuNumber && <p className="error-text">{errors.sbiDuNumber}</p>}
+
       <input
         type="date"
         name="transactionDate"
         value={formData.transactionDate}
         onChange={handleInputChange}
       />
+      {errors.transactionDate && <p className="error-text">{errors.transactionDate}</p>}
 
-      {/* Submit */}
-      <button type="submit" className="submit-button">
+      {/* Submit Button */}
+      <button type="submit" className="submit-button" onClick={console.log(formData)}>
         Submit
       </button>
     </form>

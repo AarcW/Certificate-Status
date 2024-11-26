@@ -3,6 +3,8 @@ import React from 'react';
 import { useEffect, useState } from 'react'
 import { jwtDecode } from 'jwt-decode';
 
+// Contains logic for creating Google OAuthentication login
+
 function Home() {
   const [user, setUser] = useState({});
 
@@ -23,7 +25,7 @@ function Home() {
   useEffect(() => {
     /*global google*/
     google.accounts.id.initialize({
-      client_id: "418938695402-qv1v3hpg0cm3psp6eqe5p9ceanhqkfh1.apps.googleusercontent.com",
+      client_id: "418938695402-qv1v3hpg0cm3psp6eqe5p9ceanhqkfh1.apps.googleusercontent.com", //Private Google Oauth Client ID
       callback: handleCallbackResponse //"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"
     });
 
