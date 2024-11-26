@@ -25,8 +25,8 @@ function Home() {
   useEffect(() => {
     /*global google*/
     google.accounts.id.initialize({
-      client_id: "418938695402-qv1v3hpg0cm3psp6eqe5p9ceanhqkfh1.apps.googleusercontent.com", //Private Google Oauth Client ID
-      callback: handleCallbackResponse //"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"
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: handleCallbackResponse,
     });
 
     google.accounts.id.renderButton(
@@ -42,18 +42,24 @@ function Home() {
 
   return (
     <>
-    <div>
-      <h1>Home Page</h1>
-      <p>This is the Home page of the app.</p>
-    </div>
-    <div id="signInDiv"></div>
-      {user &&
+      <div>
+        <h1>Home Page</h1>
+        <p>This is the Home page of the app.</p>
+      </div>
+      {/* Google Sign-In Button */}
+      <div id="signInDiv"></div>
+
+      {/* Displaying User Info */}
+      {user && Object.keys(user).length > 0 && (
         <div>
           <br />
-          <img src={user.picture}></img>
+          <img src={user.picture} alt="User Avatar" />
           <h3>{user.name}</h3>
+          <p><strong>Email:</strong> {user.email}</p>
+          <p><strong>Issued At:</strong> {new Date(user.iat * 1000).toLocaleString()}</p>
+          {/* You can display other details from the user object */}
         </div>
-      }
+      )}
       <br />
       {Object.keys(user).length != 0 &&
         <button onClick={(e) => handleSignOut(e)}>Sign Out</button>
