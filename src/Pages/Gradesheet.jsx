@@ -1,5 +1,13 @@
 import React, { useState } from "react";
 import "./FormStyles.css";
+import {
+  GRADESHEET_COST_PER_SEMESTER,
+  A4_ENVELOPE_COST,
+  LEGAL_ENVELOPE_COST,
+  POSTAL_COSTS,
+  YEARS,
+  COUNTRIES,
+} from "../CostVariables";
 
 function GradesheetApplicationForm() {
   const [formData, setFormData] = useState({
@@ -40,8 +48,8 @@ function GradesheetApplicationForm() {
     academicYears: "", // Added error field for academic years
   });
 
-  const countries = ["India", "USA", "Canada", "Others"];
-  const years = Array.from({ length: 21 }, (_, i) => `${2004 + i}-${2005 + i}`);
+  const countries = COUNTRIES;
+  const years = YEARS;
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -138,60 +146,45 @@ function GradesheetApplicationForm() {
         total + (year.sem1 ? 1 : 0) + (year.sem2 ? 1 : 0) + (year.summerTerm ? 1 : 0),
       0
     );
-    const gradesheetCharges = numSemestersChecked * numCopies * 100;
+    const gradesheetCharges = numSemestersChecked * numCopies * GRADESHEET_COST_PER_SEMESTER;
 
     // Envelope Charges
-    let envelopeCharges = data.universities.length * 20;
+    let envelopeCharges = data.universities.length * A4_ENVELOPE_COST;
     const hasDeliverToHome = data.universities.some((u) => u.deliverToHome);
     const extraCopies = numCopies - data.universities.length;
 
     if (hasDeliverToHome && !data.collectFromBITSGoa) {
-      envelopeCharges += 40; // Legal size envelope
+      envelopeCharges += LEGAL_ENVELOPE_COST; // Legal size envelope
     } else if (extraCopies > 0 && !data.collectFromBITSGoa) {
-      envelopeCharges += 20; // Additional envelope for extra copies
+      envelopeCharges += A4_ENVELOPE_COST; // Additional envelope for extra copies
     }
 
     // Postal Charges
     let postalCharges = 0;
+
     if (!data.collectFromBITSGoa) {
+      // Calculate postal charges for universities
       postalCharges += data.universities.reduce((total, university) => {
         if (!university.deliverToHome) {
-          switch (university.country) {
-            case "India":
-              return total + 250;
-            case "USA":
-            case "Others":
-              return total + 3600;
-            case "Canada":
-              return total + 4200;
-            default:
-              return total;
-          }
+          return total + (POSTAL_COSTS[university.country] || 0); // Default to 0 if country is not found
         }
         return total;
       }, 0);
 
+      // Add postal charges for the current address if needed
       if (hasDeliverToHome || extraCopies > 0) {
-        switch (data.currentAddressCountry) {
-          case "India":
-            postalCharges += 250;
-            break;
-          case "USA":
-          case "Others":
-            postalCharges += 3600;
-            break;
-          case "Canada":
-            postalCharges += 4200;
-            break;
-          default:
-            break;
-        }
+        postalCharges += POSTAL_COSTS[data.currentAddressCountry] || 0; // Default to 0 if country is not found
       }
     }
 
     const totalCharges = gradesheetCharges + envelopeCharges + postalCharges;
 
-    setCalculatedCharges({ gradesheetCharges, envelopeCharges, postalCharges, totalCharges });
+    setCalculatedCharges({
+      gradesheetCharges,
+      envelopeCharges,
+      postalCharges,
+      totalCharges,
+    });
   };
 
   const validateForm = () => {
