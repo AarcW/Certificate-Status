@@ -36,8 +36,6 @@ function Home() {
       }
     );
 
-    google.accounts.id.prompt();
-
   }, [])
 
   return (

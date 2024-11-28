@@ -13,7 +13,7 @@ export default function Navbar() {
           className="nav-logo" 
           style={{ width: "40px", height: "40px", marginRight: "20px" }} 
         />
-        Certificate Status
+        Gradesheet Status
       </Link>
       <ul>
         <CustomLink to="/transcript">Transcript</CustomLink>

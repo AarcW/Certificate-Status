@@ -1,4 +1,4 @@
-# Certificate Status Website
+# Gradesheet Status Website
 
 This website allows BITS Pilani Goa Campus students and alumni to apply for Duplicate Gradesheets and Transcripts for their higher studies. It then shows the status of the application and its current stage.  
 
