@@ -1,6 +1,0 @@
-Run the following:
-
-npm install
-npm install react-router-dom
-npm install jwt-decode
-npm run dev

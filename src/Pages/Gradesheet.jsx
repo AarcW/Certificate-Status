@@ -9,8 +9,10 @@ import {
   COUNTRIES,
 } from "../CostVariables";
 
+// Takes the required data from the student and shows them the Charges that must be paid by handling the complex cost calculation
+
 function GradesheetApplicationForm() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({ //a state to hold all relevant data taken from the form
     idNumber: "",
     name: "",
     email: "",
@@ -24,17 +26,17 @@ function GradesheetApplicationForm() {
     sbiDuNumber: "",
     transactionDate: "",
     collectFromBITSGoa: false,
-    emailGradesheet: false, // Added state for "E-mail me the gradesheet"
+    emailGradesheet: false, 
   });
 
-  const [calculatedCharges, setCalculatedCharges] = useState({
+  const [calculatedCharges, setCalculatedCharges] = useState({ // a state to store charges calculations
     gradesheetCharges: 0,
     envelopeCharges: 0,
     postalCharges: 0,
     totalCharges: 0,
   });
 
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState({ // a state to store errors in filling the form
     amountPaid: "",
     sbiDuNumber: "",
     transactionDate: "",
@@ -45,7 +47,7 @@ function GradesheetApplicationForm() {
     currentAddressCountry: "",
     universitiesAddress: "",
     universitiesAddressCountry: "",
-    academicYears: "", // Added error field for academic years
+    academicYears: "", 
   });
 
   const countries = COUNTRIES;
@@ -55,7 +57,7 @@ function GradesheetApplicationForm() {
     const { name, value, type, checked } = e.target;
     let newValue = type === "checkbox" ? checked : value;
 
-    if (name === "numCopies") {
+    if (name === "numCopies") { // constraints on number of copies
       const newCopies = Math.max(0, parseInt(newValue || 0)); // Ensure non-negative value
       const numUniversities = formData.universities.length;
       if (newCopies < numUniversities) {
@@ -70,14 +72,14 @@ function GradesheetApplicationForm() {
       [name]: newValue,
     }));
 
-    if (name === "collectFromBITSGoa" && checked) {
+    if (name === "collectFromBITSGoa" && checked) { // changes to calculations if collect from BITS Goa is checked
       calculateCharges({ ...formData, collectFromBITSGoa: true });
     } else {
       calculateCharges({ ...formData, [name]: newValue });
     }
   };
 
-  const handleAddUniversity = () => {
+  const handleAddUniversity = () => { // constraints on number of Universities
     if (formData.universities.length >= 10) {
       alert("You can add a maximum of 10 universities.");
       return;
@@ -188,9 +190,9 @@ function GradesheetApplicationForm() {
   };
 
   const validateForm = () => {
-    let formIsValid = true;
+    let formIsValid = true; // true if form is filled correctly without missing or incorrect fields
     
-      let newErrors = { 
+      let newErrors = { // state to store error messages to be displayed
         amountPaid: "", 
         sbiDuNumber: "", 
         transactionDate: "", 
@@ -201,11 +203,11 @@ function GradesheetApplicationForm() {
         currentAddress: "", 
         currentAddressCountry: "", 
         universitiesAddress: "", 
-        academicYears: "", // Validate academic years
+        academicYears: "", 
       
       };
 
-        // Added validation for Academic Years
+        // Validation for Academic Years
     if (!formData.selectedYears.length || !formData.selectedYears.some(year => year.sem1 || year.sem2 || year.summerTerm)) {
       newErrors.academicYears = "At least one academic year and one semester must be selected.";
       formIsValid = false;
@@ -249,17 +251,19 @@ function GradesheetApplicationForm() {
       formIsValid = false;
     }
 
-    // Validate Current Address & Universities Address (cannot be empty)
+    // Validate Current Address (cannot be empty)
     if (!formData.currentAddress.trim()) {
       newErrors.currentAddress = "Current Address cannot be empty.";
       formIsValid = false;
     }
 
+    // Validate Current Address Country (cannot be empty)
     if (!formData.currentAddressCountry) {
       newErrors.currentAddress = "Please select a Current Address Country.";
       formIsValid = false;
     }
 
+    // Validate Universities Address (cannot be empty)
     formData.universities.forEach((university, index) => {
       if (!university.address.trim()) {
         newErrors.universitiesAddress = `University Address cannot be empty.`;
@@ -273,11 +277,13 @@ function GradesheetApplicationForm() {
       formIsValid = false;
     }
 
+    // Validate SBI DU Number (cannot be empty)
     if (!formData.sbiDuNumber) {
       newErrors.sbiDuNumber = "Please mention a SBI DU Number.";
       formIsValid = false;
     }
 
+    // Validate University Address Country (cannot be empty)
     formData.universities.forEach((university, index) => {
       if (!university.country.trim()) {
         newErrors.universitiesAddress = `Please select a University Country.`;
@@ -285,6 +291,7 @@ function GradesheetApplicationForm() {
       }
     });
 
+    // Validate name (cannot be empty)
     if (!formData.name) {
       newErrors.name = "Please mention your Name.";
       formIsValid = false;
@@ -305,7 +312,8 @@ function GradesheetApplicationForm() {
   };
 
   
-  return (
+  return ( // generates the visible components which use above functions
+
     <form className="form-container" onSubmit={handleSubmit}>
       <h1 className="form-title">Gradesheet Application Form</h1>
       <br/>

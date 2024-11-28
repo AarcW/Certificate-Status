@@ -1,12 +1,14 @@
 import { Link, useMatch, useResolvedPath } from "react-router-dom"
 
+// generates the Navbar component at the top of the page
+
 export default function Navbar() {
   return (
     <nav className="nav">
         
       <Link to="/" className="site-title">
       <img 
-          src="/logo.png"  // The path should be relative to the public directory
+          src="/logo.png" 
           alt="Site Logo" 
           className="nav-logo" 
           style={{ width: "40px", height: "40px", marginRight: "20px" }} 
