@@ -28,4 +28,4 @@ npm run dev
 The website will start running on the following URL:
 http://localhost:5173/
 
-NOTE: Internet connect is needed as the application contacts google servers for Google OAuthentication
+NOTE: Internet connection is needed as the application contacts google servers for Google OAuthentication
